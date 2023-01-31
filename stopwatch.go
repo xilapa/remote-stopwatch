@@ -18,11 +18,13 @@ func mustCreateNanoIdGen() func() string {
 	return nanoIdGen
 }
 
+// Observer is something that wants to
+// listens to the stopwatch.
 type Observer interface {
 	Send(t time.Duration)
 }
 
-type StopWatcher struct {
+type StopWatch struct {
 	id          string
 	startTime   time.Time
 	timeElapsed chan time.Duration
@@ -31,8 +33,10 @@ type StopWatcher struct {
 	observers   []Observer
 }
 
-func NewStopWatcher() *StopWatcher {
-	return &StopWatcher{
+// TODO: use options pattern to configure a new stopwatcher
+
+func NewStopWatcher() *StopWatch {
+	return &StopWatch{
 		id:          nanoIdGen(),
 		startTime:   time.Time{},
 		timeElapsed: make(chan time.Duration, 1),
@@ -42,7 +46,9 @@ func NewStopWatcher() *StopWatcher {
 	}
 }
 
-func (sw *StopWatcher) timeLoop() {
+// timeLoop sends the elapsed time periodically
+// to timeElapsed channel.
+func (sw *StopWatch) timeLoop() {
 	defer close(sw.done)
 
 	select {
@@ -58,7 +64,8 @@ func (sw *StopWatcher) timeLoop() {
 	}
 }
 
-func (sw *StopWatcher) Start() {
+// Start the stop watcher.
+func (sw *StopWatch) Start() {
 	sw.startTime = time.Now()
 
 	// start time loop on another go routine
@@ -77,20 +84,24 @@ func (sw *StopWatcher) Start() {
 	close(sw.timeElapsed)
 }
 
-func (sw *StopWatcher) Stop() {
+// Stop the stop watcher, pausing the time.
+func (sw *StopWatch) Stop() {
 	close(sw.stopChan)
 	<-sw.done
 	sw.done = nil
 }
 
-func (sw *StopWatcher) Continue() {
+// Continue the stop watcher from the current
+// elapsed time.
+func (sw *StopWatch) Continue() {
 	sw.stopChan = make(chan struct{})
 	sw.done = make(chan struct{})
 	sw.timeElapsed = make(chan time.Duration)
 	go sw.timeLoop()
 }
 
-func (sw *StopWatcher) Reset() {
+// Reset the stopwatch time.
+func (sw *StopWatch) Reset() {
 	sw.Stop()
 	sw.stopChan = make(chan struct{})
 	sw.done = make(chan struct{})

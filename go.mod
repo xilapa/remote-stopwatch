@@ -1,4 +1,4 @@
-module github.com/xilapa/remote-stopwatcher
+module github.com/xilapa/remote-stopwatch
 
 go 1.19
 
