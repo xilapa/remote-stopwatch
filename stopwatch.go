@@ -1,6 +1,7 @@
-package remotestopwatcher
+package remotestopwatch
 
 import (
+	"sync"
 	"time"
 
 	"github.com/jaevor/go-nanoid"
@@ -31,18 +32,19 @@ type StopWatch struct {
 	stopChan    chan struct{}
 	done        chan struct{}
 	observers   []Observer
+	mtx         sync.Mutex
 }
 
 // TODO: use options pattern to configure a new stopwatcher
 
-func NewStopWatcher() *StopWatch {
+func NewStopWatch() *StopWatch {
 	return &StopWatch{
 		id:          nanoIdGen(),
 		startTime:   time.Time{},
 		timeElapsed: make(chan time.Duration, 1),
 		stopChan:    make(chan struct{}, 1),
-		done:        make(chan struct{}),
-		observers:   make([]Observer, 6),
+		done:        make(chan struct{}, 1),
+		observers:   make([]Observer, 0, 6),
 	}
 }
 
@@ -51,41 +53,50 @@ func NewStopWatcher() *StopWatch {
 func (sw *StopWatch) timeLoop() {
 	defer close(sw.done)
 
-	select {
-	// send the elapsed time periodically
-	case <-time.After(timeLoopDelay):
-		sw.timeElapsed <- time.Since(sw.startTime)
+	for {
+		select {
+		// send the elapsed time periodically
+		case <-time.After(timeLoopDelay):
+			sw.timeElapsed <- time.Since(sw.startTime)
 
-	// if stop is called, send the elapsed time to
-	// the channel and stop the go function
-	case <-sw.stopChan:
-		sw.timeElapsed <- time.Since(sw.startTime)
-		return
+		// if stop is called, send the elapsed time to
+		// the channel and stop the go function
+		case <-sw.stopChan:
+			sw.timeElapsed <- time.Since(sw.startTime)
+			return
+		}
 	}
 }
 
 // Start the stop watcher.
 func (sw *StopWatch) Start() {
+
+	// TODO: create an internal start function that receives
+	// the start time
+
 	sw.startTime = time.Now()
 
 	// start time loop on another go routine
 	go sw.timeLoop()
 
-	// send the elapsed time to observers
-	for t := range sw.timeElapsed {
-		for i := range sw.observers {
-			sw.observers[i].Send(t)
+	// listen to timeElapsed channel on another go routine
+	go func() {
+		defer close(sw.timeElapsed)
+		// send the elapsed time to observers
+		for t := range sw.timeElapsed {
+			for i := range sw.observers {
+				sw.observers[i].Send(t)
+			}
+			if sw.done == nil {
+				return
+			}
 		}
-		if sw.done == nil {
-			return
-		}
-	}
-
-	close(sw.timeElapsed)
+	}()
 }
 
 // Stop the stop watcher, pausing the time.
 func (sw *StopWatch) Stop() {
+	// TODO: what happens if stop is called twice?
 	close(sw.stopChan)
 	<-sw.done
 	sw.done = nil
@@ -97,14 +108,24 @@ func (sw *StopWatch) Continue() {
 	sw.stopChan = make(chan struct{})
 	sw.done = make(chan struct{})
 	sw.timeElapsed = make(chan time.Duration)
+	// TODO: continue should call start
 	go sw.timeLoop()
 }
 
 // Reset the stopwatch time.
 func (sw *StopWatch) Reset() {
 	sw.Stop()
+	// TODO: reset should call continue
 	sw.stopChan = make(chan struct{})
 	sw.done = make(chan struct{})
 	sw.timeElapsed = make(chan time.Duration)
 	sw.Start()
+}
+
+// Add a new observer to the stopwatch.
+func (sw *StopWatch) Add(o Observer) {
+	sw.mtx.Lock()
+	defer sw.mtx.Unlock()
+
+	sw.observers = append(sw.observers, o)
 }
