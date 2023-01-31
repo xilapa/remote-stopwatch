@@ -1,2 +1,6 @@
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
+github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/jaevor/go-nanoid v1.3.0 h1:nD+iepesZS6pr3uOVf20vR9GdGgJW1HPaR46gtrxzkg=
 github.com/jaevor/go-nanoid v1.3.0/go.mod h1:SI+jFaPuddYkqkVQoNGHs81navCtH388TcrH0RqFKgY=
+github.com/xilapa/go-tiny-projects/test-assertions v0.0.0-20230119015138-fad46f66ffab h1:n37Kih2q6GJMbmN7Qn+CphnwfjlL397LIIBh1YBOAkY=
+github.com/xilapa/go-tiny-projects/test-assertions v0.0.0-20230119015138-fad46f66ffab/go.mod h1:Ufw9Urnn9sbDNc0e0j08WxzTbIrqCXxk93I/aKGonm0=
