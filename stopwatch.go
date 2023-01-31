@@ -87,8 +87,13 @@ func (sw *StopWatch) Start() {
 			for i := range sw.observers {
 				sw.observers[i].Send(t)
 			}
-			if sw.done == nil {
+
+			// if stop is called, stop the go function
+			select {
+			case <-sw.stopChan:
 				return
+			default:
+				continue
 			}
 		}
 	}()
@@ -99,7 +104,6 @@ func (sw *StopWatch) Stop() {
 	// TODO: what happens if stop is called twice?
 	close(sw.stopChan)
 	<-sw.done
-	sw.done = nil
 }
 
 // Continue the stop watcher from the current
