@@ -48,11 +48,11 @@ func TestTimeCount(t *testing.T) {
 
 	lastObservedTime := obs1.times[len(obs1.times)-1]
 
-	// TODO: make an assert true on tiny-projects
-	assert.Equal(t,
-		lastObservedTime >= 3,
-		true,
-		"last observed time should be greater than 3 seconds")
+	assert.True(
+		t,
+		lastObservedTime >= 3*time.Second,
+		"last observed time should be greater than 3 seconds",
+	)
 }
 
 // TODO: test for stop-> continue
