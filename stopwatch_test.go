@@ -53,9 +53,48 @@ func TestTimeCount(t *testing.T) {
 		lastObservedTime >= 3*time.Second,
 		"last observed time should be greater than 3 seconds",
 	)
+
+	assert.True(
+		t,
+		lastObservedTime == sw.stopDuration,
+		"last observed time should be equal to stop duration",
+	)
 }
 
-// TODO: test for stop-> continue
+func TestStopContinue(t *testing.T) {
+	sw := NewStopWatch()
+
+	for i := 0; i < 5000; i++ {
+		sw.Add(newTestObserver())
+	}
+
+	obs1 := newTestObserver()
+
+	sw.Add(obs1)
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	sw.Continue()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	lastObservedTime := obs1.times[len(obs1.times)-1]
+
+	assert.True(
+		t,
+		lastObservedTime >= 6*time.Second,
+		"last observed time should be greater than 6 seconds",
+	)
+
+	assert.True(
+		t,
+		lastObservedTime == sw.stopDuration,
+		"last observed time should be equal to stop duration",
+	)
+}
+
 // TODO: test for stop-> reset -> start
 // TODO: test for stop twice
 // TODO: test for start twice
