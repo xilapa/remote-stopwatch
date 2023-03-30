@@ -26,32 +26,34 @@ type Observer interface {
 }
 
 type StopWatch struct {
-	id          string
-	startTime   time.Time
-	timeElapsed chan time.Duration
-	stopChan    chan struct{}
-	done        chan struct{}
-	observers   []Observer
-	mtx         sync.Mutex
+	id           string             // id of the stop watch
+	startTime    time.Time          // start time of the stop watch
+	timeElapsed  chan time.Duration // channel to send the elapsed time, also indicate when StopWatch is stopped
+	stopChan     chan struct{}      // channel that indicates the intention to stop the StopWatch
+	timeLoopDone chan struct{}      // channel that indicates the timeLoop is done/stopped
+	observers    []Observer         // observers that want to listen to the StopWatch
+	stopDuration time.Duration      // the duration of the StopWatch when it is stopped
+	mtx          sync.Mutex         // mutex to protect the observers
 }
 
 // TODO: use options pattern to configure a new stopwatcher
 
 func NewStopWatch() *StopWatch {
 	return &StopWatch{
-		id:          nanoIdGen(),
-		startTime:   time.Time{},
-		timeElapsed: make(chan time.Duration, 1),
-		stopChan:    make(chan struct{}, 1),
-		done:        make(chan struct{}, 1),
-		observers:   make([]Observer, 0, 6),
+		id:           nanoIdGen(),
+		startTime:    time.Time{},
+		timeElapsed:  make(chan time.Duration, 1),
+		stopChan:     make(chan struct{}, 1),
+		timeLoopDone: make(chan struct{}, 1),
+		observers:    make([]Observer, 0, 6),
+		stopDuration: time.Duration(0),
 	}
 }
 
 // timeLoop sends the elapsed time periodically
 // to timeElapsed channel.
 func (sw *StopWatch) timeLoop() {
-	defer close(sw.done)
+	defer close(sw.timeLoopDone)
 
 	for {
 		select {
@@ -59,22 +61,21 @@ func (sw *StopWatch) timeLoop() {
 		case <-time.After(timeLoopDelay):
 			sw.timeElapsed <- time.Since(sw.startTime)
 
-		// if stop is called, send the elapsed time to
-		// the channel and stop the go function
+		// if stop is called, save the elapsed time and
+		// send it to the channel
+		// then stop the go function
 		case <-sw.stopChan:
-			sw.timeElapsed <- time.Since(sw.startTime)
+			sw.stopDuration = time.Since(sw.startTime)
+			sw.timeElapsed <- sw.stopDuration
 			return
 		}
 	}
 }
 
-// Start the stop watcher.
-func (sw *StopWatch) Start() {
-
-	// TODO: create an internal start function that receives
+// startFrom starts the stopwatch from a given time.
+func (sw *StopWatch) startFrom(t time.Time) {
 	// the start time
-
-	sw.startTime = time.Now()
+	sw.startTime = t
 
 	// start time loop on another go routine
 	go sw.timeLoop()
@@ -84,13 +85,17 @@ func (sw *StopWatch) Start() {
 		defer close(sw.timeElapsed)
 		// send the elapsed time to observers
 		for t := range sw.timeElapsed {
-			for i := range sw.observers {
-				sw.observers[i].NewTime(t)
+			for o := range sw.observers {
+				sw.observers[o].NewTime(t)
 			}
 
-			// if stop is called, stop the go function
+			// if stop is called, send the last timeElapsed
+			// and then stop the go function
 			select {
-			case <-sw.stopChan:
+			case <-sw.timeLoopDone:
+				for o := range sw.observers {
+					sw.observers[o].NewTime(sw.stopDuration)
+				}
 				return
 			default:
 				continue
@@ -99,31 +104,37 @@ func (sw *StopWatch) Start() {
 	}()
 }
 
+// Start the stop watcher.
+func (sw *StopWatch) Start() {
+	sw.startFrom(time.Now())
+}
+
+// resetChannels resets the channels.
+func (sw *StopWatch) resetChannels() {
+	sw.stopChan = make(chan struct{})
+	sw.timeElapsed = make(chan time.Duration)
+	sw.timeLoopDone = make(chan struct{})
+}
+
 // Stop the stop watcher, pausing the time.
 func (sw *StopWatch) Stop() {
 	// TODO: what happens if stop is called twice?
 	close(sw.stopChan)
-	<-sw.done
+	<-sw.timeElapsed
+	sw.resetChannels()
 }
 
 // Continue the stop watcher from the current
 // elapsed time.
 func (sw *StopWatch) Continue() {
-	sw.stopChan = make(chan struct{})
-	sw.done = make(chan struct{})
-	sw.timeElapsed = make(chan time.Duration)
-	// TODO: continue should call start
-	go sw.timeLoop()
+	sw.startFrom(time.Now().Add(-sw.stopDuration))
 }
 
 // Reset the stopwatch time.
 func (sw *StopWatch) Reset() {
 	sw.Stop()
-	// TODO: reset should call continue
-	sw.stopChan = make(chan struct{})
-	sw.done = make(chan struct{})
-	sw.timeElapsed = make(chan time.Duration)
-	sw.Start()
+	sw.resetChannels()
+	sw.stopDuration = time.Duration(0)
 }
 
 // Add a new observer to the stopwatch.
