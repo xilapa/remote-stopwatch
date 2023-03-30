@@ -22,7 +22,7 @@ func mustCreateNanoIdGen() func() string {
 // Observer is something that wants to
 // listens to the stopwatch.
 type Observer interface {
-	Send(t time.Duration)
+	NewTime(t time.Duration)
 }
 
 type StopWatch struct {
@@ -85,7 +85,7 @@ func (sw *StopWatch) Start() {
 		// send the elapsed time to observers
 		for t := range sw.timeElapsed {
 			for i := range sw.observers {
-				sw.observers[i].Send(t)
+				sw.observers[i].NewTime(t)
 			}
 
 			// if stop is called, stop the go function

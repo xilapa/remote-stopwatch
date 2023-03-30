@@ -11,7 +11,7 @@ type testObserver struct {
 	times []time.Duration
 }
 
-func (to *testObserver) Send(t time.Duration) {
+func (to *testObserver) NewTime(t time.Duration) {
 	to.times = append(to.times, t)
 }
 
