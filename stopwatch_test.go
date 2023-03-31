@@ -23,11 +23,6 @@ func newTestObserver() *testObserver {
 
 var _ Observer = (*testObserver)(nil)
 
-// TODO: table driven tests
-// timeCountData := map[string]struct{
-// 	total int
-// }
-
 func TestTimeCount(t *testing.T) {
 	sw := NewStopWatch()
 
@@ -56,7 +51,7 @@ func TestTimeCount(t *testing.T) {
 
 	assert.True(
 		t,
-		lastObservedTime == sw.stopDuration,
+		lastObservedTime == sw.stopTime,
 		"last observed time should be equal to stop duration",
 	)
 }
@@ -90,12 +85,79 @@ func TestStopContinue(t *testing.T) {
 
 	assert.True(
 		t,
-		lastObservedTime == sw.stopDuration,
+		lastObservedTime == sw.stopTime,
 		"last observed time should be equal to stop duration",
 	)
 }
 
-// TODO: test for stop-> reset -> start
+func TestReset(t *testing.T) {
+	sw := NewStopWatch()
+
+	for i := 0; i < 5000; i++ {
+		sw.Add(newTestObserver())
+	}
+
+	obs1 := newTestObserver()
+
+	sw.Add(obs1)
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	sw.Reset()
+
+	lastObservedTime := obs1.times[len(obs1.times)-1]
+
+	assert.True(
+		t,
+		lastObservedTime == 0,
+		"last observed time should be 0",
+	)
+
+	assert.True(
+		t,
+		lastObservedTime == sw.stopTime,
+		"last observed time should be equal to stop duration",
+	)
+}
+
+func TestResetStart(t *testing.T) {
+	sw := NewStopWatch()
+
+	for i := 0; i < 5000; i++ {
+		sw.Add(newTestObserver())
+	}
+
+	obs1 := newTestObserver()
+
+	sw.Add(obs1)
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	sw.Reset()
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	lastObservedTime := obs1.times[len(obs1.times)-1]
+
+	assert.True(
+		t,
+		lastObservedTime >= 3*time.Second,
+		"last observed time should be greater than 3 seconds",
+	)
+
+	assert.True(
+		t,
+		lastObservedTime == sw.stopTime,
+		"last observed time should be equal to stop duration",
+	)
+}
+
 // TODO: test for stop twice
 // TODO: test for start twice
 // TODO: test for continue twice
