@@ -24,6 +24,8 @@ func newTestObserver() *testObserver {
 var _ Observer = (*testObserver)(nil)
 
 func TestTimeCount(t *testing.T) {
+	t.Parallel()
+
 	sw := NewStopWatch()
 
 	obs1 := newTestObserver()
@@ -57,6 +59,8 @@ func TestTimeCount(t *testing.T) {
 }
 
 func TestStopContinue(t *testing.T) {
+	t.Parallel()
+
 	sw := NewStopWatch()
 
 	for i := 0; i < 5000; i++ {
@@ -91,6 +95,8 @@ func TestStopContinue(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
+	t.Parallel()
+
 	sw := NewStopWatch()
 
 	for i := 0; i < 5000; i++ {
@@ -123,6 +129,8 @@ func TestReset(t *testing.T) {
 }
 
 func TestResetStart(t *testing.T) {
+	t.Parallel()
+
 	sw := NewStopWatch()
 
 	for i := 0; i < 5000; i++ {
