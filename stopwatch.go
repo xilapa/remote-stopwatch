@@ -28,9 +28,10 @@ type Observer interface {
 type StopWatch struct {
 	id           string             // id of the stop watch
 	startTime    time.Time          // start time of the stop watch
-	timeElapsed  chan time.Duration // channel to send the elapsed time, also indicate when StopWatch is stopped
+	timeElapsed  chan time.Duration // channel to send the elapsed time
 	stopChan     chan struct{}      // channel that indicates the intention to stop the StopWatch
 	timeLoopDone chan struct{}      // channel that indicates the timeLoop is done/stopped
+	running      bool               // indicates the StopWatch is running
 	observers    []Observer         // observers that want to listen to the StopWatch
 	stopTime     time.Duration      // the duration of the StopWatch when it is stopped
 	mtx          sync.Mutex         // mutex to protect the observers
@@ -78,8 +79,16 @@ func (sw *StopWatch) sendTimeToObservers(t time.Duration) {
 	}
 }
 
+func (sw *StopWatch) changeRunningState(running bool) {
+	sw.mtx.Lock()
+	sw.running = running
+	sw.mtx.Unlock()
+}
+
 // startFrom starts the stopwatch from a given time.
 func (sw *StopWatch) startFrom(t time.Time) {
+	sw.changeRunningState(true)
+
 	// the start time
 	sw.startTime = t
 
@@ -106,11 +115,6 @@ func (sw *StopWatch) startFrom(t time.Time) {
 	}()
 }
 
-// Start the stop watcher.
-func (sw *StopWatch) Start() {
-	sw.startFrom(time.Now())
-}
-
 // resetChannels resets the channels.
 func (sw *StopWatch) resetChannels() {
 	sw.stopChan = make(chan struct{})
@@ -118,24 +122,42 @@ func (sw *StopWatch) resetChannels() {
 	sw.timeLoopDone = make(chan struct{})
 }
 
+// Start the stop watcher.
+func (sw *StopWatch) Start() error {
+	if sw.running {
+		return ErrStopWatchAlreadyRunning{}
+	}
+	sw.startFrom(time.Now())
+	return nil
+}
+
 // Stop the stop watcher, pausing the time.
-func (sw *StopWatch) Stop() {
-	// TODO: what happens if stop is called twice?
+func (sw *StopWatch) Stop() error {
+	if !sw.running {
+		return ErrStopWatchNotRunning{}
+	}
 	close(sw.stopChan)
 	<-sw.timeElapsed
 	sw.resetChannels()
+	sw.changeRunningState(false)
+	return nil
 }
 
 // Continue the stop watcher from the current
 // elapsed time.
-func (sw *StopWatch) Continue() {
+func (sw *StopWatch) Continue() error {
+	if sw.running {
+		return ErrStopWatchAlreadyRunning{}
+	}
+
 	sw.startFrom(time.Now().Add(-sw.stopTime))
+	return nil
 }
 
 // Reset the stopwatch time.
 func (sw *StopWatch) Reset() {
 	// if the stopwatch is running, stop it
-	if len(sw.timeElapsed) != 0 {
+	if sw.running {
 		sw.Stop()
 	}
 	sw.stopTime = time.Duration(0)

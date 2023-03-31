@@ -166,7 +166,75 @@ func TestResetStart(t *testing.T) {
 	)
 }
 
-// TODO: test for stop twice
-// TODO: test for start twice
-// TODO: test for continue twice
-// TODO: test for reset twice
+func TestStopTwice(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	err := sw.Stop()
+
+	assert.NoError(t, err, "first stop should not return an error")
+
+	firstStopTime := sw.stopTime
+
+	err = sw.Stop()
+	assert.Error(t, err, "second stop should return an error")
+	assert.Equal(t, ErrStopWatchNotRunning{}, err)
+
+	assert.True(
+		t,
+		firstStopTime == sw.stopTime,
+		"stop time should not change after second stop",
+	)
+}
+
+func TestStartTwice(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+
+	err := sw.Start()
+	assert.NoError(t, err, "first start should not return an error")
+
+	err = sw.Start()
+	assert.Error(t, err, "second start should return an error")
+	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
+
+	sw.Stop()
+}
+
+func TestContinueTwice(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	err := sw.Continue()
+	assert.NoError(t, err, "first continue should not return an error")
+
+	err = sw.Continue()
+	assert.Error(t, err, "second continue should return an error")
+	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
+
+	sw.Stop()
+}
+
+func TestResetTwice(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Stop()
+
+	sw.Reset()
+	sw.Reset()
+
+	assert.True(t, sw.stopTime == 0, "stop time should be 0 after reset")
+}
