@@ -238,3 +238,30 @@ func TestResetTwice(t *testing.T) {
 
 	assert.True(t, sw.stopTime == 0, "stop time should be 0 after reset")
 }
+
+func TestContinueWithoutStop(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+
+	sw.Start()
+	<-time.After(3 * time.Second)
+
+	err := sw.Continue()
+	assert.Error(t, err, "continue should return an error")
+	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
+
+	sw.Stop()
+}
+
+func TestContinueWithoutStart(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+
+	err := sw.Continue()
+	assert.NoError(t, err, "continue should return an error")
+	assert.Equal(t, sw.running, true)
+
+	sw.Stop()
+}
