@@ -10,18 +10,21 @@ import (
 
 var (
 	templates  = template.Must(template.ParseFiles("pages/home.html"))
-	stopwatchs = cmap.New[sw.StopWatch]()
+	stopwatchs = cmap.New[*sw.StopWatch]()
 )
 
 func main() {
-
-	// just for testing
-	stopwatchs.Set("1", *sw.NewStopWatch())
-
 	http.HandleFunc("/", home)
+	http.HandleFunc("/create", create)
 	http.ListenAndServe(":8080", nil)
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "home.html", stopwatchs.Count())
+}
+
+func create(w http.ResponseWriter, r *http.Request) {
+	stopwatch := sw.NewStopWatch()
+	stopwatchs.Set(stopwatch.Id, stopwatch)
+	http.Redirect(w, r, "/join/"+stopwatch.Id, http.StatusFound)
 }
