@@ -1,4 +1,4 @@
-package remotestopwatch
+package stopwatch
 
 import (
 	"sync"
