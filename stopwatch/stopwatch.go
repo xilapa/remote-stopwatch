@@ -9,7 +9,7 @@ import (
 
 var nanoIdGen = mustCreateNanoIdGen()
 
-const timeLoopDelay = time.Millisecond * 300
+const timeLoopDelay = time.Millisecond * 100
 
 func mustCreateNanoIdGen() func() string {
 	nanoIdGen, err := nanoid.Standard(21)
@@ -22,11 +22,12 @@ func mustCreateNanoIdGen() func() string {
 // Observer is something that wants to
 // listens to the stopwatch.
 type Observer interface {
-	NewTime(t time.Duration)
+	HandleNewTime(t time.Duration)
 }
 
 type StopWatch struct {
-	id           string             // id of the stop watch
+	Id           string             // id of the stop watch
+	CurrentTime  time.Duration      // current time of the stop watch
 	startTime    time.Time          // start time of the stop watch
 	timeElapsed  chan time.Duration // channel to send the elapsed time
 	stopChan     chan struct{}      // channel that indicates the intention to stop the StopWatch
@@ -41,7 +42,7 @@ type StopWatch struct {
 
 func NewStopWatch() *StopWatch {
 	return &StopWatch{
-		id:           nanoIdGen(),
+		Id:           nanoIdGen(),
 		startTime:    time.Time{},
 		timeElapsed:  make(chan time.Duration, 1),
 		stopChan:     make(chan struct{}, 1),
@@ -60,13 +61,15 @@ func (sw *StopWatch) timeLoop() {
 		select {
 		// send the elapsed time periodically
 		case <-time.After(timeLoopDelay):
-			sw.timeElapsed <- time.Since(sw.startTime)
+			sw.CurrentTime = time.Since(sw.startTime)
+			sw.timeElapsed <- sw.CurrentTime
 
 		// if stop is called, save the elapsed time and
 		// send it to the channel
 		// then stop the go function
 		case <-sw.stopChan:
 			sw.stopTime = time.Since(sw.startTime)
+			sw.CurrentTime = sw.stopTime
 			sw.timeElapsed <- sw.stopTime
 			return
 		}
@@ -75,7 +78,7 @@ func (sw *StopWatch) timeLoop() {
 
 func (sw *StopWatch) sendTimeToObservers(t time.Duration) {
 	for o := range sw.observers {
-		sw.observers[o].NewTime(t)
+		sw.observers[o].HandleNewTime(t)
 	}
 }
 
@@ -170,4 +173,8 @@ func (sw *StopWatch) Add(o Observer) {
 	defer sw.mtx.Unlock()
 
 	sw.observers = append(sw.observers, o)
+}
+
+func (sw *StopWatch) ObserversCount() int {
+	return len(sw.observers)
 }
