@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Remote StopWatch</title>
+    <style>
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            font-size: 2rem;
+            padding: 1rem 2rem;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        .join {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .running {
+            text-align: center;
+        }
+
+        input[type="text"] {
+            font-size: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ccc;
+            margin-right: 1rem;
+            width: 20rem;
+        }
+
+        button[type="submit"] {
+            font-size: 1.5rem;
+            padding: 0.5rem 2rem;
+            background-color: #008CBA;
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #006f8c;
+        }
+
+        input[type="text"] {
+            margin-right: 1rem;
+        }
+
+        button[type="submit"] {
+            margin-left: 1rem;
+        }
+    </style>
+    <script>
+        function join(e) {
+            console.log("entrou")
+            debugger
+            // if it's not enter, then return
+            if (e && e.charCode != 13) {
+                return
+            }
+            // get the value of the input
+            const id = document.getElementById("join").value
+            window.location.href = `/join/${id}`
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Remote Stopwatch</h1>
+    <button onclick="window.location.href='/create'">Create</button>
+    <div class="join">
+        <input type="text" onkeypress="join(event)" placeholder="Join ID" id="join">
+        <button type="submit" onclick="join()">OK</button>
+    </div>
+
+    <p class="running">Stopwatchs running: {{.}}</p>
+</body>
+
+</html>
