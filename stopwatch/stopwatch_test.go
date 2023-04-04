@@ -265,3 +265,23 @@ func TestContinueWithoutStart(t *testing.T) {
 
 	sw.Stop()
 }
+
+func TestRemoveObserver(t *testing.T) {
+	t.Parallel()
+
+	sw := NewStopWatch()
+	assert.Equal(t, 0, sw.ObserversCount(), "should have 0 observers")
+
+	obs1 := newTestObserver()
+	obs2 := newTestObserver()
+
+	sw.Add(obs1)
+	sw.Add(obs2)
+	assert.Equal(t, 2, sw.ObserversCount(), "should have 2 observers")
+
+	sw.Remove(obs1)
+	assert.Equal(t, 1, sw.ObserversCount(), "should have 1 observer")
+
+	sw.Remove(obs2)
+	assert.Equal(t, 0, sw.ObserversCount(), "should have 0 observers")
+}
