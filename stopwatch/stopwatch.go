@@ -9,7 +9,7 @@ import (
 
 var nanoIdGen = mustCreateNanoIdGen()
 
-const timeLoopDelay = time.Millisecond * 100
+const timeLoopDelay = time.Millisecond * 150
 
 func mustCreateNanoIdGen() func() string {
 	nanoIdGen, err := nanoid.Standard(21)
@@ -173,6 +173,19 @@ func (sw *StopWatch) Add(o Observer) {
 	defer sw.mtx.Unlock()
 
 	sw.observers = append(sw.observers, o)
+}
+
+// Remove an observer from the stopwatch.
+func (sw *StopWatch) Remove(o Observer) {
+	sw.mtx.Lock()
+	defer sw.mtx.Unlock()
+
+	for i, obs := range sw.observers {
+		if obs == o {
+			sw.observers = append(sw.observers[:i], sw.observers[i+1:]...)
+			return
+		}
+	}
 }
 
 func (sw *StopWatch) ObserversCount() int {

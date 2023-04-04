@@ -76,6 +76,7 @@ func syncwatch(w http.ResponseWriter, r *http.Request) {
 	obs := wsobserver.NewWebSocketObserver(r.Context(), c)
 	stopwatch.Add(obs)
 	obs.Broadcast()
+	stopwatch.Remove(obs)
 }
 
 func getStopwatchFromPath(path string) *sw.StopWatch {
