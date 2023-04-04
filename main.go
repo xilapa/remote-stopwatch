@@ -46,6 +46,7 @@ func join(w http.ResponseWriter, r *http.Request) {
 	stopwatch := getStopwatchFromPath(r.URL.Path)
 	if stopwatch == nil {
 		http.Redirect(w, r, "/", http.StatusFound)
+		return
 	}
 
 	view := observerView{
