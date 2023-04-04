@@ -2,7 +2,6 @@ package wsobserver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/xilapa/remote-stopwatch/stopwatch"
@@ -16,37 +15,30 @@ type WsObserver struct {
 }
 
 func (w *WsObserver) HandleNewTime(t time.Duration) {
-	fmt.Println("received time from stopwatch: ", t)
 	select {
 	// do not block if the channel is full
 	case w.receivedTimes <- t:
-		return
 	default:
 		return
 	}
 }
 
-func (w *WsObserver) broadcast() {
-	go func() {
-		for t := range w.receivedTimes {
-			// TODO: context
-			err := w.c.Write(context.Background(), websocket.MessageText, []byte(t.String()))
-			if err != nil {
-				w.c.Close(websocket.StatusInternalError, "failed to write to websocket")
-				return
-			}
+func (w *WsObserver) Broadcast() {
+	for t := range w.receivedTimes {
+		err := w.c.Write(w.ctx, websocket.MessageText, []byte(t.String()))
+		if err != nil {
+			w.c.Close(websocket.StatusInternalError, "failed to write to websocket")
+			return
 		}
-	}()
+	}
 }
 
-func NewWebSocketObserver(ctx context.Context, c *websocket.Conn) stopwatch.Observer {
-	wso := &WsObserver{
+func NewWebSocketObserver(ctx context.Context, c *websocket.Conn) *WsObserver {
+	return &WsObserver{
 		receivedTimes: make(chan (time.Duration), 1),
 		c:             c,
-		ctx:           ctx,
+		ctx:           c.CloseRead(ctx),
 	}
-	wso.broadcast()
-	return wso
 }
 
 var _ stopwatch.Observer = (*WsObserver)(nil)
