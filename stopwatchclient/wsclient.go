@@ -1,4 +1,4 @@
-package wsobserver
+package stopwatchclient
 
 import (
 	"context"
@@ -8,13 +8,13 @@ import (
 	"nhooyr.io/websocket"
 )
 
-type WsObserver struct {
+type StopWatchWSClient struct {
 	receivedTimes chan (time.Duration) // channel to receive time from the stopwatch
 	c             *websocket.Conn
 	ctx           context.Context
 }
 
-func (w *WsObserver) HandleNewTime(t time.Duration) {
+func (w *StopWatchWSClient) HandleNewTime(t time.Duration) {
 	select {
 	// do not block if the channel is full
 	case w.receivedTimes <- t:
@@ -23,7 +23,7 @@ func (w *WsObserver) HandleNewTime(t time.Duration) {
 	}
 }
 
-func (w *WsObserver) Broadcast() {
+func (w *StopWatchWSClient) Broadcast() {
 	for t := range w.receivedTimes {
 		err := w.c.Write(w.ctx, websocket.MessageText, []byte(t.String()))
 		if err != nil {
@@ -33,12 +33,12 @@ func (w *WsObserver) Broadcast() {
 	}
 }
 
-func NewWebSocketObserver(ctx context.Context, c *websocket.Conn) *WsObserver {
-	return &WsObserver{
+func NewWebSocketClient(ctx context.Context, c *websocket.Conn) *StopWatchWSClient {
+	return &StopWatchWSClient{
 		receivedTimes: make(chan (time.Duration), 1),
 		c:             c,
 		ctx:           c.CloseRead(ctx),
 	}
 }
 
-var _ stopwatch.Observer = (*WsObserver)(nil)
+var _ stopwatch.Observer = (*StopWatchWSClient)(nil)

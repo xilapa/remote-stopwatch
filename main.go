@@ -8,7 +8,7 @@ import (
 
 	cmap "github.com/orcaman/concurrent-map/v2"
 	sw "github.com/xilapa/remote-stopwatch/stopwatch"
-	"github.com/xilapa/remote-stopwatch/wsobserver"
+	"github.com/xilapa/remote-stopwatch/stopwatchclient"
 	"nhooyr.io/websocket"
 )
 
@@ -73,7 +73,7 @@ func syncwatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obs := wsobserver.NewWebSocketObserver(r.Context(), c)
+	obs := stopwatchclient.NewWebSocketClient(r.Context(), c)
 	stopwatch.Add(obs)
 	obs.Broadcast()
 	stopwatch.Remove(obs)
