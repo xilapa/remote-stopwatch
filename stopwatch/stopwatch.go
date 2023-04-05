@@ -184,8 +184,8 @@ func (sw *StopWatch) Remove(o Observer) {
 	sw.mtx.Lock()
 	defer sw.mtx.Unlock()
 
-	for i, obs := range sw.observers {
-		if obs == o {
+	for i := range sw.observers {
+		if sw.observers[i] == o {
 			sw.observers = append(sw.observers[:i], sw.observers[i+1:]...)
 			return
 		}
