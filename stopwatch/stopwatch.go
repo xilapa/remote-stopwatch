@@ -26,9 +26,9 @@ type Observer interface {
 }
 
 type StopWatch struct {
-	Id           string             // id of the stop watch
-	CurrentTime  time.Duration      // current time of the stop watch
-	startTime    time.Time          // start time of the stop watch
+	Id           string             // id of the stopwatch
+	CurrentTime  time.Duration      // current time of the stopwatch
+	startTime    time.Time          // start time of the stopwatch
 	timeElapsed  chan time.Duration // channel to send the elapsed time
 	stopChan     chan struct{}      // channel that indicates the intention to stop the StopWatch
 	timeLoopDone chan struct{}      // channel that indicates the timeLoop is done/stopped
@@ -38,7 +38,7 @@ type StopWatch struct {
 	mtx          sync.Mutex         // mutex to protect the observers
 }
 
-// TODO: use options pattern to configure a new stopwatcher
+// TODO: use options pattern to configure a new stopwatch
 
 func NewStopWatch() *StopWatch {
 	return &StopWatch{
@@ -125,7 +125,7 @@ func (sw *StopWatch) resetChannels() {
 	sw.timeLoopDone = make(chan struct{})
 }
 
-// Start the stop watcher.
+// Start the stopwatch.
 func (sw *StopWatch) Start() error {
 	if sw.running {
 		return ErrStopWatchAlreadyRunning{}
@@ -134,7 +134,7 @@ func (sw *StopWatch) Start() error {
 	return nil
 }
 
-// Stop the stop watcher, pausing the time.
+// Stop the stopwatch, pausing the time.
 func (sw *StopWatch) Stop() error {
 	if !sw.running {
 		return ErrStopWatchNotRunning{}
@@ -146,7 +146,7 @@ func (sw *StopWatch) Stop() error {
 	return nil
 }
 
-// Continue the stop watcher from the current
+// Continue the stopwatch from the current
 // elapsed time.
 func (sw *StopWatch) Continue() error {
 	if sw.running {
@@ -188,6 +188,7 @@ func (sw *StopWatch) Remove(o Observer) {
 	}
 }
 
+// ObserversCount returns the current number of observers.
 func (sw *StopWatch) ObserversCount() int {
 	return len(sw.observers)
 }
