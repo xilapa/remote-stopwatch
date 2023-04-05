@@ -2,6 +2,7 @@ package stopwatchclient
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/xilapa/remote-stopwatch/stopwatch"
@@ -37,7 +38,7 @@ func (w *StopWatchWSClient) HandleNewTime(t time.Duration) {
 // broadcast sends the received time to the websocket client.
 func (w *StopWatchWSClient) broadcast() {
 	for t := range w.receivedTimes {
-		err := w.c.Write(w.ctx, websocket.MessageText, []byte(t.String()))
+		err := w.c.Write(w.ctx, websocket.MessageText, []byte(fmt.Sprintf("%d", t.Milliseconds())))
 		if err != nil {
 			w.stopClient()
 			return

@@ -48,7 +48,7 @@
             max-width: 600px;
         }
 
-        .stopwatch-container{
+        .stopwatch-container {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -67,24 +67,47 @@
             border-radius: 5px;
         }
 
-        .users{
+        .users {
             text-align: center;
         }
     </style>
     <script>
+        // time constants
+        const hourMs = 3600 * 1000
+        const minMs = 60 * 1000
+        const secMs = 1000
+
         // Connect to WebSocket server
-        const ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}');
+        const ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
 
         // When WebSocket connection is opened
         ws.onopen = function () {
-            console.log('WebSocket connection opened.');
-        };
+            console.log('WebSocket connection opened.')
+        }
 
         // When a message is received from WebSocket server
-        ws.onmessage = function (event) {
+        ws.onmessage = function (event) {            
             // Update stopwatch with received time
-            document.getElementById('stopwatch').innerText = event.data;
-        };
+            document.getElementById('stopwatch').innerText = convertMillisecondsToTime(event.data)
+        }
+
+        function convertMillisecondsToTime(milliseconds) {
+            let hours, minutes, seconds, ms;
+            hours = Math.floor(milliseconds / hourMs);
+            milliseconds = milliseconds % hourMs;
+
+            minutes = Math.floor(milliseconds / minMs);
+            milliseconds = milliseconds % minMs;
+
+            seconds = Math.floor(milliseconds / secMs);
+            milliseconds = milliseconds % secMs;
+
+            return `${hours.toString().padStart(2, '0')}` +
+                `:${minutes.toString().padStart(2, '0')}` +
+                `:${seconds.toString().padStart(2, '0')}` +
+                `:${milliseconds.toString().padStart(3, '0')}`;
+        }
+
 
         // TODO: on close, on error
     </script>
@@ -94,7 +117,7 @@
     <h1>Remote Stopwatch</h1>
     <p class="users">Connected users: {{.ObserversCount}}</p>
     <div class="stopwatch-container">
-        <div id="stopwatch">00:00:00</div>
+        <div id="stopwatch">00:00:00:000</div>
     </div>
     <div class="buttons-container">
         <button id="start">Start</button>
