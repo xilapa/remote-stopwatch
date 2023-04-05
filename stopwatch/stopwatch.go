@@ -9,8 +9,6 @@ import (
 
 var nanoIdGen = mustCreateNanoIdGen()
 
-const timeLoopDelay = time.Millisecond * 150
-
 func mustCreateNanoIdGen() func() string {
 	nanoIdGen, err := nanoid.Standard(21)
 	if err != nil {
@@ -26,30 +24,36 @@ type Observer interface {
 }
 
 type StopWatch struct {
-	Id           string             // id of the stopwatch
-	CurrentTime  time.Duration      // current time of the stopwatch
-	startTime    time.Time          // start time of the stopwatch
-	timeElapsed  chan time.Duration // channel to send the elapsed time
-	stopChan     chan struct{}      // channel that indicates the intention to stop the StopWatch
-	timeLoopDone chan struct{}      // channel that indicates the timeLoop is done/stopped
-	running      bool               // indicates the StopWatch is running
-	observers    []Observer         // observers that want to listen to the StopWatch
-	stopTime     time.Duration      // the duration of the StopWatch when it is stopped
-	mtx          sync.Mutex         // mutex to protect the observers
+	Id               string             // id of the stopwatch
+	CurrentTime      time.Duration      // current time of the stopwatch
+	startTime        time.Time          // start time of the stopwatch
+	timeElapsed      chan time.Duration // channel to send the elapsed time
+	stopChan         chan struct{}      // channel that indicates the intention to stop the StopWatch
+	timeLoopDone     chan struct{}      // channel that indicates the timeLoop is done/stopped
+	running          bool               // indicates the StopWatch is running
+	observers        []Observer         // observers that want to listen to the StopWatch
+	stopTime         time.Duration      // the duration of the StopWatch when it is stopped
+	timeLoopInterval time.Duration      // the interval of the timeLoop
+	mtx              sync.Mutex         // mutex to protect the observers
 }
 
-// TODO: use options pattern to configure a new stopwatch
-
-func NewStopWatch() *StopWatch {
-	return &StopWatch{
-		Id:           nanoIdGen(),
-		startTime:    time.Time{},
-		timeElapsed:  make(chan time.Duration, 1),
-		stopChan:     make(chan struct{}, 1),
-		timeLoopDone: make(chan struct{}, 1),
-		observers:    make([]Observer, 0, 6),
-		stopTime:     time.Duration(0),
+func NewStopWatch(opts ...StopwatchOptions) *StopWatch {
+	sw := &StopWatch{
+		Id:               nanoIdGen(),
+		startTime:        time.Time{},
+		timeElapsed:      make(chan time.Duration, 1),
+		stopChan:         make(chan struct{}, 1),
+		timeLoopDone:     make(chan struct{}, 1),
+		observers:        make([]Observer, 0, 6),
+		stopTime:         time.Duration(0),
+		timeLoopInterval: time.Millisecond * 150,
 	}
+
+	for i := range opts {
+		opts[i](sw)
+	}
+
+	return sw
 }
 
 // timeLoop sends the elapsed time periodically
@@ -60,7 +64,7 @@ func (sw *StopWatch) timeLoop() {
 	for {
 		select {
 		// send the elapsed time periodically
-		case <-time.After(timeLoopDelay):
+		case <-time.After(sw.timeLoopInterval):
 			sw.CurrentTime = time.Since(sw.startTime)
 			sw.timeElapsed <- sw.CurrentTime
 
