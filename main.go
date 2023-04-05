@@ -8,7 +8,7 @@ import (
 
 	cmap "github.com/orcaman/concurrent-map/v2"
 	sw "github.com/xilapa/remote-stopwatch/stopwatch"
-	"github.com/xilapa/remote-stopwatch/stopwatchclient"
+	swclient "github.com/xilapa/remote-stopwatch/stopwatchclient"
 	"nhooyr.io/websocket"
 )
 
@@ -59,24 +59,19 @@ func join(w http.ResponseWriter, r *http.Request) {
 }
 
 func syncwatch(w http.ResponseWriter, r *http.Request) {
+	stopwatch := getStopwatchFromPath(r.URL.Path)
+
+	if stopwatch == nil {
+		return
+	}
+
 	c, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		return
 	}
 
-	stopwatch := getStopwatchFromPath(r.URL.Path)
-
-	// just for testing
-	stopwatch.Start()
-	if stopwatch == nil {
-		c.Close(websocket.StatusNormalClosure, "stopwatch not found")
-		return
-	}
-
-	obs := stopwatchclient.NewWebSocketClient(r.Context(), c)
-	stopwatch.Add(obs)
-	obs.Broadcast()
-	stopwatch.Remove(obs)
+	obs := swclient.NewWebSocketClient(r.Context(), c)
+	obs.Handle(stopwatch)
 }
 
 func getStopwatchFromPath(path string) *sw.StopWatch {
