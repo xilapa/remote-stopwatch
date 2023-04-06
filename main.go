@@ -31,7 +31,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	stopwatch := sw.NewStopWatch()
+	stopwatch := sw.NewStopWatch(sw.WithTimeLoopInterval(250 * time.Millisecond))
 	stopwatchs.Set(stopwatch.Id, stopwatch)
 	http.Redirect(w, r, "/join/"+stopwatch.Id, http.StatusFound)
 }
