@@ -49,6 +49,12 @@ func (w *StopWatchWSClient) HandleNewTime(t time.Duration) {
 	}
 }
 
+// HandleReset is called by the stopwatch when the stopwatch is reset.
+// The method sends a zero time to the messages channel, blocking.
+func (w *StopWatchWSClient) HandleReset() {
+	w.msgs <- "time:0"
+}
+
 // Handle the stopwatch through the websocket connection.
 // The method only returns when the websocket connection is closed.
 func (w *StopWatchWSClient) Handle(sw *stopwatch.StopWatch) {
