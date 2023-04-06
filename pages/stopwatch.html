@@ -77,6 +77,14 @@
         const minMs = 60 * 1000
         const secMs = 1000
 
+        // elements
+        let swEl = () =>{
+            let el
+            if (el) return el
+            el = document.getElementById('stopwatch')
+            return el
+        }
+
         // Connect to WebSocket server
         const ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
 
@@ -86,9 +94,16 @@
         }
 
         // When a message is received from WebSocket server
-        ws.onmessage = function (event) {            
-            // Update stopwatch with received time
-            document.getElementById('stopwatch').innerText = convertMillisecondsToTime(event.data)
+        ws.onmessage = function (event) {
+            msg = event.data.split(':')
+
+            switch (msg[0]) {
+                // Update stopwatch with received time
+                case 'time':
+                    swEl().innerText = convertMillisecondsToTime(msg[1])
+                    return
+            }
+
         }
 
         function convertMillisecondsToTime(milliseconds) {
@@ -109,6 +124,10 @@
         }
 
 
+        function send(message) {
+            ws.send(message)
+        }
+
         // TODO: on close, on error
     </script>
 </head>
@@ -120,9 +139,9 @@
         <div id="stopwatch">00:00:00:000</div>
     </div>
     <div class="buttons-container">
-        <button id="start">Start</button>
-        <button id="stop">Stop</button>
-        <button id="reset">Reset</button>
+        <button id="start" onclick="send('start')">Start</button>
+        <button id="stop" onclick="send('stop')">Stop</button>
+        <button id="reset" onclick="send('reset')">Reset</button>
     </div>
 
 
