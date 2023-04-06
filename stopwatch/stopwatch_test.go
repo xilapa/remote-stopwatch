@@ -8,11 +8,16 @@ import (
 )
 
 type testObserver struct {
-	times []time.Duration
+	times  []time.Duration
+	resets []int
 }
 
 func (to *testObserver) HandleNewTime(t time.Duration) {
 	to.times = append(to.times, t)
+}
+
+func (to *testObserver) HandleReset() {
+	to.resets = append(to.resets, 0)
 }
 
 func newTestObserver() *testObserver {
@@ -109,22 +114,19 @@ func TestReset(t *testing.T) {
 
 	sw.Start()
 	<-time.After(3 * time.Second)
-	sw.Stop()
 
 	sw.Reset()
 
-	lastObservedTime := obs1.times[len(obs1.times)-1]
-
 	assert.True(
 		t,
-		lastObservedTime == 0,
-		"last observed time should be 0",
+		sw.stopTime == 0,
+		"last observed time should be equal to stop duration",
 	)
 
 	assert.True(
 		t,
-		lastObservedTime == sw.stopTime,
-		"last observed time should be equal to stop duration",
+		len(obs1.resets) == 1,
+		"observer should have been reset once",
 	)
 }
 
@@ -143,8 +145,6 @@ func TestResetStart(t *testing.T) {
 
 	sw.Start()
 	<-time.After(3 * time.Second)
-	sw.Stop()
-
 	sw.Reset()
 
 	sw.Start()
@@ -163,6 +163,12 @@ func TestResetStart(t *testing.T) {
 		t,
 		lastObservedTime == sw.stopTime,
 		"last observed time should be equal to stop duration",
+	)
+
+	assert.True(
+		t,
+		len(obs1.resets) == 1,
+		"observer should have been reset once",
 	)
 }
 
@@ -229,14 +235,17 @@ func TestResetTwice(t *testing.T) {
 
 	sw := NewStopWatch()
 
+	obs := newTestObserver()
+	sw.Add(obs)
+
 	sw.Start()
 	<-time.After(3 * time.Second)
-	sw.Stop()
 
 	sw.Reset()
 	sw.Reset()
 
 	assert.True(t, sw.stopTime == 0, "stop time should be 0 after reset")
+	assert.True(t, len(obs.resets) == 2, "observer should have 2 resets")
 }
 
 func TestContinueWithoutStop(t *testing.T) {
