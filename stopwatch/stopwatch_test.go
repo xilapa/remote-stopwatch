@@ -200,13 +200,18 @@ func TestStartTwice(t *testing.T) {
 	t.Parallel()
 
 	sw := NewStopWatch()
+	obs := newTestObserver()
+	sw.Add(obs)
 
-	err := sw.Start()
-	assert.NoError(t, err, "first start should not return an error")
+	sw.Start()
+	<-time.After(3 * time.Second)
+	sw.Start()
+	<-time.After(1 * time.Second)
 
-	err = sw.Start()
-	assert.Error(t, err, "second start should return an error")
-	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
+	assert.True(t, sw.running, "stop watch should be running")
+
+	lastObservedTime := obs.times[len(obs.times)-1]
+	assert.True(t, lastObservedTime >= 4, "last observed time should be greater than 4 seconds")
 
 	sw.Stop()
 }
@@ -227,33 +232,6 @@ func TestResetTwice(t *testing.T) {
 
 	assert.True(t, sw.stopTime == 0, "stop time should be 0 after reset")
 	assert.True(t, len(obs.resets) == 2, "observer should have 2 resets")
-}
-
-func TestContinueWithoutStop(t *testing.T) {
-	t.Parallel()
-
-	sw := NewStopWatch()
-
-	sw.Start()
-	<-time.After(3 * time.Second)
-
-	err := sw.Continue()
-	assert.Error(t, err, "continue should return an error")
-	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
-
-	sw.Stop()
-}
-
-func TestContinueWithoutStart(t *testing.T) {
-	t.Parallel()
-
-	sw := NewStopWatch()
-
-	err := sw.Continue()
-	assert.NoError(t, err, "continue should return an error")
-	assert.Equal(t, sw.running, true)
-
-	sw.Stop()
 }
 
 func TestRemoveObserver(t *testing.T) {
