@@ -179,15 +179,11 @@ func TestStopTwice(t *testing.T) {
 
 	sw.Start()
 	<-time.After(3 * time.Second)
-	err := sw.Stop()
-
-	assert.NoError(t, err, "first stop should not return an error")
+	sw.Stop()
 
 	firstStopTime := sw.stopTime
 
-	err = sw.Stop()
-	assert.Error(t, err, "second stop should return an error")
-	assert.Equal(t, ErrStopWatchNotRunning{}, err)
+	sw.Stop()
 
 	assert.True(
 		t,

@@ -132,15 +132,14 @@ func (sw *StopWatch) Start() {
 }
 
 // Stop the stopwatch, pausing the time.
-func (sw *StopWatch) Stop() error {
+func (sw *StopWatch) Stop() {
 	if !sw.running {
-		return ErrStopWatchNotRunning{}
+		return
 	}
 	close(sw.stopChan)
 	<-sw.timeElapsed
 	sw.resetChannels()
 	sw.changeRunningState(false)
-	return nil
 }
 
 // Reset the stopwatch time.
