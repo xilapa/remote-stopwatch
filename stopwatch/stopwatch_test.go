@@ -80,7 +80,7 @@ func TestStopContinue(t *testing.T) {
 	<-time.After(3 * time.Second)
 	sw.Stop()
 
-	sw.Continue()
+	sw.Start()
 	<-time.After(3 * time.Second)
 	sw.Stop()
 
@@ -206,25 +206,6 @@ func TestStartTwice(t *testing.T) {
 
 	err = sw.Start()
 	assert.Error(t, err, "second start should return an error")
-	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
-
-	sw.Stop()
-}
-
-func TestContinueTwice(t *testing.T) {
-	t.Parallel()
-
-	sw := NewStopWatch()
-
-	sw.Start()
-	<-time.After(3 * time.Second)
-	sw.Stop()
-
-	err := sw.Continue()
-	assert.NoError(t, err, "first continue should not return an error")
-
-	err = sw.Continue()
-	assert.Error(t, err, "second continue should return an error")
 	assert.Equal(t, ErrStopWatchAlreadyRunning{}, err)
 
 	sw.Stop()

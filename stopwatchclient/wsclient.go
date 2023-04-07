@@ -12,10 +12,9 @@ import (
 )
 
 var (
-	startBytes    = []byte("start")
-	stopBytes     = []byte("stop")
-	continueBytes = []byte("continue")
-	resetBytes    = []byte("reset")
+	startBytes = []byte("start")
+	stopBytes  = []byte("stop")
+	resetBytes = []byte("reset")
 )
 
 type StopWatchWSClient struct {
@@ -101,8 +100,6 @@ func (w *StopWatchWSClient) executeStopwatchCmmd(b []byte) {
 		w.sw.Start()
 	case bytes.Equal(b, stopBytes):
 		w.sw.Stop()
-	case bytes.Equal(b, continueBytes):
-		w.sw.Continue()
 	case bytes.Equal(b, resetBytes):
 		w.sw.Reset()
 	}

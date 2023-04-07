@@ -123,13 +123,12 @@ func (sw *StopWatch) resetChannels() {
 	sw.timeLoopDone = make(chan struct{})
 }
 
-// Start the stopwatch.
-func (sw *StopWatch) Start() error {
+// Start the stopwatch or continue if the stopwatch is stopped.
+func (sw *StopWatch) Start() {
 	if sw.running {
-		return ErrStopWatchAlreadyRunning{}
+		return
 	}
-	sw.startFrom(time.Now())
-	return nil
+	sw.startFrom(time.Now().Add(-sw.stopTime))
 }
 
 // Stop the stopwatch, pausing the time.
@@ -141,17 +140,6 @@ func (sw *StopWatch) Stop() error {
 	<-sw.timeElapsed
 	sw.resetChannels()
 	sw.changeRunningState(false)
-	return nil
-}
-
-// Continue the stopwatch from the current
-// elapsed time.
-func (sw *StopWatch) Continue() error {
-	if sw.running {
-		return ErrStopWatchAlreadyRunning{}
-	}
-
-	sw.startFrom(time.Now().Add(-sw.stopTime))
 	return nil
 }
 
