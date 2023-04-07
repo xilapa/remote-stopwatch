@@ -78,7 +78,7 @@
         const secMs = 1000
 
         // elements
-        let swEl = () =>{
+        let swEl = () => {
             let el
             if (el) return el
             el = document.getElementById('stopwatch')
@@ -86,7 +86,7 @@
         }
 
         // Connect to WebSocket server
-        const ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
+        let ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
 
         // When WebSocket connection is opened
         ws.onopen = function () {
@@ -104,6 +104,14 @@
                     return
             }
 
+        }
+
+        ws.onclose = reconnect
+        ws.onerror = reconnect
+
+        function reconnect() {
+            console.log('WebSocket connection closed. Reconnecting...')
+            ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
         }
 
         function convertMillisecondsToTime(milliseconds) {
@@ -127,8 +135,6 @@
         function send(message) {
             ws.send(message)
         }
-
-        // TODO: on close, on error
     </script>
 </head>
 
