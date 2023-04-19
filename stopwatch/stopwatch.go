@@ -158,9 +158,17 @@ func (sw *StopWatch) Reset() {
 		sw.Stop()
 	}
 	sw.stopTime = time.Duration(0)
-	for o := range sw.observers {
-		sw.observers[o].HandleReset()
+	for idx := range sw.observers {
+		sw.sendResetToObserver(idx)
 	}
+}
+
+// sendResetToObserver sends the reset signal to an observer.
+// If the observer is removed during sending the reset signal,
+// it will recover from panic.
+func (sw *StopWatch) sendResetToObserver(idx int) {
+	defer recover()
+	sw.observers[idx].HandleReset()
 }
 
 // Add a new observer to the stopwatch.
