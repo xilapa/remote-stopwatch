@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"regexp"
+	"syscall"
 	"text/template"
 	"time"
 
@@ -16,6 +20,7 @@ var (
 	templates   = template.Must(template.ParseFiles("pages/home.html", "pages/stopwatch.html"))
 	stopwatchs  = cmap.New[*sw.StopWatch]()
 	idValidator = regexp.MustCompile("^/(join|syncwatch)/([A-Za-z0-9_-]+)$")
+	fiveMinutes = 5 * time.Minute
 )
 
 func main() {
@@ -23,6 +28,12 @@ func main() {
 	http.HandleFunc("/create", create)
 	http.HandleFunc("/join/", join)
 	http.HandleFunc("/syncwatch/", syncwatch)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go removeIdleStopwatchs(sigs)
+
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -72,10 +83,6 @@ func syncwatch(w http.ResponseWriter, r *http.Request) {
 
 	obs := swclient.NewWebSocketClient(r.Context(), c)
 	obs.Handle(stopwatch)
-
-	if stopwatch.ObserversCount() == 0 {
-		stopwatchs.Remove(stopwatch.Id)
-	}
 }
 
 func getStopwatchFromPath(path string) *sw.StopWatch {
@@ -88,4 +95,27 @@ func getStopwatchFromPath(path string) *sw.StopWatch {
 		return nil
 	}
 	return stopWatch
+}
+
+func removeIdleStopwatchs(signals <-chan os.Signal) {
+	for {
+		select {
+		case <-time.After(fiveMinutes):
+			keysToRemove := make([]string, 0, stopwatchs.Count())
+
+			stopwatchs.IterCb(func(key string, sw *sw.StopWatch) {
+				if (sw.IdleSince != time.Time{} && time.Since(sw.IdleSince) > fiveMinutes) {
+					keysToRemove = append(keysToRemove, key)
+				}
+			})
+
+			for i := range keysToRemove {
+				stopwatchs.Remove(keysToRemove[i])
+			}
+
+		case sig := <-signals:
+			fmt.Println("Terminating... ", sig)
+			return
+		}
+	}
 }

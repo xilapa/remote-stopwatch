@@ -20,6 +20,7 @@ func mustCreateNanoIdGen() func() string {
 type StopWatch struct {
 	Id               string             // id of the stopwatch
 	CurrentTime      time.Duration      // current time of the stopwatch
+	IdleSince        time.Time          // time when the stopwatch start to be idle
 	startTime        time.Time          // start time of the stopwatch
 	timeElapsed      chan time.Duration // channel to send the elapsed time
 	stopChan         chan struct{}      // channel that indicates the intention to stop the StopWatch
@@ -160,6 +161,7 @@ func (sw *StopWatch) Add(o Observer) {
 	defer sw.mtx.Unlock()
 
 	sw.observers = append(sw.observers, o)
+	sw.IdleSince = time.Time{}
 }
 
 // Remove an observer from the stopwatch.
@@ -170,8 +172,11 @@ func (sw *StopWatch) Remove(o Observer) {
 	for i := range sw.observers {
 		if sw.observers[i] == o {
 			sw.observers = append(sw.observers[:i], sw.observers[i+1:]...)
-			return
 		}
+	}
+
+	if len(sw.observers) == 0 {
+		sw.IdleSince = time.Now()
 	}
 }
 
