@@ -107,13 +107,13 @@ func (w *StopWatchWSClient) executeStopwatchCmmd(b []byte) {
 
 // send messages to the websocket client.
 func (w *StopWatchWSClient) send() {
-	for msg := range w.msgs {
+	for {
 		select {
 		// case an error is reported by read(), stop send() and return the error
 		case err := <-w.err:
 			w.err <- err
 			return
-		default:
+		case msg :=<- w.msgs :
 			err := w.c.Write(w.ctx, websocket.MessageText, []byte(msg))
 			// report error and return
 			if err != nil {
