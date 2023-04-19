@@ -76,9 +76,17 @@ func (sw *StopWatch) timeLoop() {
 }
 
 func (sw *StopWatch) sendTimeToObservers(t time.Duration) {
-	for o := range sw.observers {
-		sw.observers[o].HandleNewTime(t)
+	for idx := range sw.observers {
+		sw.sendTimeToObserserver(idx, t)
 	}
+}
+
+// sendTimeToObserserver sends the elapsed time to an observer.
+// If the observer is removed during sending the time, it will
+// recover from panic.
+func (sw *StopWatch) sendTimeToObserserver(idx int, t time.Duration) {
+	defer recover()
+	sw.observers[idx].HandleNewTime(t)
 }
 
 func (sw *StopWatch) changeRunningState(running bool) {
