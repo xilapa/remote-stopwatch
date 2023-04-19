@@ -71,7 +71,7 @@
             text-align: center;
         }
     </style>
-    <script>
+    <script defer>
         // time constants
         const hourMs = 3600 * 1000
         const minMs = 60 * 1000
@@ -94,8 +94,10 @@
         }
 
         // When a message is received from WebSocket server
-        ws.onmessage = function (event) {
-            msg = event.data.split(':')
+        ws.onmessage = processEvent
+
+        function processEvent(e) {
+            msg = e.data.split(':')
 
             switch (msg[0]) {
                 // Update stopwatch with received time
@@ -135,10 +137,16 @@
         function send(message) {
             ws.send(message)
         }
+
+        // set stopwatch to current time
+        function renderCurrentTime(){
+            const currentTime = document.getElementById('current-time').innerText
+            processEvent({ data: `time:${currentTime.replace("s","")}` })
+        }
     </script>
 </head>
 
-<body>
+<body onload="renderCurrentTime()">
     <h1>Remote Stopwatch</h1>
     <p class="users">Connected users: {{.ObserversCount}}</p>
     <div class="stopwatch-container">
@@ -149,6 +157,8 @@
         <button id="stop" onclick="send('stop')">Stop</button>
         <button id="reset" onclick="send('reset')">Reset</button>
     </div>
+
+    <div style="display: none;" id="current-time">{{.CurrentTime}}</div>
 
 
 </body>

@@ -50,7 +50,7 @@ func create(w http.ResponseWriter, r *http.Request) {
 type observerView struct {
 	ObserversCount int
 	Id             string
-	CurrentTime    time.Duration
+	CurrentTime    string
 }
 
 func join(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,7 @@ func join(w http.ResponseWriter, r *http.Request) {
 	view := observerView{
 		ObserversCount: stopwatch.ObserversCount(),
 		Id:             stopwatch.Id,
-		CurrentTime:    stopwatch.CurrentTime,
+		CurrentTime:    fmt.Sprintf("%d", stopwatch.CurrentTime.Milliseconds()),
 	}
 
 	templates.ExecuteTemplate(w, "stopwatch.html", view)
