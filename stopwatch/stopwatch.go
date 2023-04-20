@@ -189,7 +189,13 @@ func (sw *StopWatch) Remove(o Observer) {
 	sw.mtx.Lock()
 	defer sw.mtx.Unlock()
 
-	for i := range sw.observers {
+	obsCount := len(sw.observers)
+
+	for i := 0; i < obsCount; i++ {
+		if i >= len(sw.observers) {
+			break
+		}
+
 		if sw.observers[i] == o {
 			sw.observers = append(sw.observers[:i], sw.observers[i+1:]...)
 		}

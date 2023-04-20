@@ -10,6 +10,7 @@ import (
 type testObserver struct {
 	times  []time.Duration
 	resets []int
+	counts []int
 }
 
 func (to *testObserver) HandleNewTime(t time.Duration) {
@@ -20,10 +21,12 @@ func (to *testObserver) HandleReset() {
 	to.resets = append(to.resets, 0)
 }
 
+func (to *testObserver) HandleObserverCountChange(c int) {
+	to.counts = append(to.counts, c)
+}
+
 func newTestObserver() *testObserver {
-	return &testObserver{
-		times: make([]time.Duration, 0, 6),
-	}
+	return &testObserver{}
 }
 
 var _ Observer = (*testObserver)(nil)
@@ -230,7 +233,7 @@ func TestResetTwice(t *testing.T) {
 	assert.True(t, len(obs.resets) == 2, "observer should have 2 resets")
 }
 
-func TestRemoveObserver(t *testing.T) {
+func TestAddRemoveObserver(t *testing.T) {
 	t.Parallel()
 
 	sw := NewStopWatch()
@@ -242,9 +245,16 @@ func TestRemoveObserver(t *testing.T) {
 	sw.Add(obs1)
 	sw.Add(obs2)
 	assert.Equal(t, 2, sw.ObserversCount(), "should have 2 observers")
+	assert.Equal(t,
+		obs1.counts[len(obs1.counts)-1],
+		obs2.counts[len(obs2.counts)-1],
+		"observers should have the same count")
+	assert.Equal(t, obs1.counts, []int{1, 2}, "observer 1 should have 2 counts")
+	assert.Equal(t, obs2.counts, []int{2}, "observer 2 should have 1 count")
 
 	sw.Remove(obs1)
 	assert.Equal(t, 1, sw.ObserversCount(), "should have 1 observer")
+	assert.Equal(t, obs2.counts, []int{2, 1}, "observer 2 should be notified of removal")
 
 	sw.Remove(obs2)
 	assert.Equal(t, 0, sw.ObserversCount(), "should have 0 observers")
