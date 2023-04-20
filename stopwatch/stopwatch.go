@@ -1,6 +1,7 @@
 package stopwatch
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -218,4 +219,12 @@ func (sw *StopWatch) sendNewObserverCountToObservers(idx, newCount int) {
 // ObserversCount returns the current number of observers.
 func (sw *StopWatch) ObserversCount() int {
 	return len(sw.observers)
+}
+
+func (sw *StopWatch) GetCurrentView() *StopwatchView {
+	return &StopwatchView{
+		ObserversCount: sw.ObserversCount(),
+		Id:             sw.Id,
+		CurrentTime:    fmt.Sprintf("%d", sw.CurrentTime.Milliseconds()),
+	}
 }

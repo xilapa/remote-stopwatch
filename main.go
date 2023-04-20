@@ -47,12 +47,6 @@ func create(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/join/"+stopwatch.Id, http.StatusFound)
 }
 
-type observerView struct {
-	ObserversCount int
-	Id             string
-	CurrentTime    string
-}
-
 func join(w http.ResponseWriter, r *http.Request) {
 	stopwatch := getStopwatchFromPath(r.URL.Path)
 	if stopwatch == nil {
@@ -60,12 +54,7 @@ func join(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view := observerView{
-		ObserversCount: stopwatch.ObserversCount(),
-		Id:             stopwatch.Id,
-		CurrentTime:    fmt.Sprintf("%d", stopwatch.CurrentTime.Milliseconds()),
-	}
-
+	view := stopwatch.GetCurrentView()
 	templates.ExecuteTemplate(w, "stopwatch.html", view)
 }
 
