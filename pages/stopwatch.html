@@ -85,6 +85,13 @@
             return el
         }
 
+        let countEl = () => {
+            let el
+            if (el) return el
+            el = document.getElementById('count')
+            return el
+        }
+
         // Connect to WebSocket server
         let ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
 
@@ -103,6 +110,9 @@
                 // Update stopwatch with received time
                 case 'time':
                     swEl().innerText = convertMillisecondsToTime(msg[1])
+                    return
+                case 'count':
+                    countEl().innerText = `Connected users: ${msg[1]}`
                     return
             }
 
@@ -148,7 +158,7 @@
 
 <body onload="renderCurrentTime()">
     <h1>Remote Stopwatch</h1>
-    <p class="users">Connected users: {{.ObserversCount}}</p>
+    <p class="users" id="count">Connected users: {{.ObserversCount}}</p>
     <div class="stopwatch-container">
         <div id="stopwatch">00:00:00:000</div>
     </div>

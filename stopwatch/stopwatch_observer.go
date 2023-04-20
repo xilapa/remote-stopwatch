@@ -15,4 +15,8 @@ type Observer interface {
 	// This method should block until the observer is done. Because the
 	// observers must know that the stopwatch is reset.
 	HandleReset()
+
+	// HandleObserverCountChange is called when the number of observers
+	// changes. This method should block.
+	HandleObserverCountChange(count int)
 }

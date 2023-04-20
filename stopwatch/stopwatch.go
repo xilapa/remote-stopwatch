@@ -178,6 +178,10 @@ func (sw *StopWatch) Add(o Observer) {
 
 	sw.observers = append(sw.observers, o)
 	sw.IdleSince = time.Time{}
+
+	for idx := range sw.observers {
+		sw.sendNewObserverCountToObservers(idx, len(sw.observers))
+	}
 }
 
 // Remove an observer from the stopwatch.
@@ -194,6 +198,15 @@ func (sw *StopWatch) Remove(o Observer) {
 	if len(sw.observers) == 0 {
 		sw.IdleSince = time.Now()
 	}
+
+	for idx := range sw.observers {
+		sw.sendNewObserverCountToObservers(idx, len(sw.observers))
+	}
+}
+
+func (sw *StopWatch) sendNewObserverCountToObservers(idx, newCount int) {
+	defer recover()
+	sw.observers[idx].HandleObserverCountChange(newCount)
 }
 
 // ObserversCount returns the current number of observers.

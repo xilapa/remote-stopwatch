@@ -54,6 +54,10 @@ func (w *StopWatchWSClient) HandleReset() {
 	w.msgs <- "time:0"
 }
 
+func (w *StopWatchWSClient) HandleObserverCountChange(c int) {
+	w.msgs <- fmt.Sprintf("count:%d", c)
+}
+
 // Handle the stopwatch through the websocket connection.
 // The method only returns when the websocket connection is closed.
 func (w *StopWatchWSClient) Handle(sw *stopwatch.StopWatch) {
@@ -113,7 +117,7 @@ func (w *StopWatchWSClient) send() {
 		case err := <-w.err:
 			w.err <- err
 			return
-		case msg :=<- w.msgs :
+		case msg := <-w.msgs:
 			err := w.c.Write(w.ctx, websocket.MessageText, []byte(msg))
 			// report error and return
 			if err != nil {
