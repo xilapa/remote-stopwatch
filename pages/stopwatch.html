@@ -44,7 +44,6 @@
             justify-content: center;
             align-items: center;
             margin-top: 2rem;
-            width: 30vw;
             max-width: 600px;
         }
 
@@ -70,6 +69,42 @@
         .users {
             text-align: center;
         }
+
+        .share {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .share-btn {
+            font-size: 1.5rem;
+            padding: 0.5rem 2rem;
+            margin: 0 0.5rem 0 0.5rem;
+            background-color: #008CBA;
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .share-btn:hover {
+            background-color: #006f8c;
+        }
+
+        #share-id {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            padding: 0.5rem 2rem;
+            margin-top: 1.5rem;
+            background-color: #464141;
+            color: #fff;
+            display: flex;
+            border-radius: 4px;
+        }
     </style>
     <script defer>
         // time constants
@@ -89,6 +124,13 @@
             let el
             if (el) return el
             el = document.getElementById('count')
+            return el
+        }
+
+        let idEl = () => {
+            let el
+            if (el) return el
+            el = document.getElementById('share-id')
             return el
         }
 
@@ -149,10 +191,36 @@
         }
 
         // set stopwatch to current time
-        function renderCurrentTime(){
+        function renderCurrentTime() {
             const currentTime = document.getElementById('current-time').innerText
-            processEvent({ data: `time:${currentTime.replace("s","")}` })
+            processEvent({ data: `time:${currentTime.replace("s", "")}` })
         }
+
+        function copyIdToClipboard() {
+            debugger
+            const id = idEl().innerText;
+            copyTextToClipboard(id);
+        }
+
+        function copyUrlToClipboard() {
+            copyTextToClipboard(window.location.href);
+        }
+
+        function copyTextToClipboard(valueToCopy) {
+            // Create a temporary input element
+            const inputElement = document.createElement("input");
+            // Set the value of the input element to the ID
+            inputElement.value = valueToCopy;
+            // Append the input element to the body
+            document.body.appendChild(inputElement);
+            // Select the contents of the input element
+            inputElement.select();
+            // Copy the selected text to the clipboard
+            document.execCommand("copy");
+            // Remove the input element from the body
+            document.body.removeChild(inputElement);
+        }
+
     </script>
 </head>
 
@@ -167,9 +235,13 @@
         <button id="stop" onclick="send('stop')">Stop</button>
         <button id="reset" onclick="send('reset')">Reset</button>
     </div>
+    <div id="share-id">{{.Id}}</div>
+    <div class="share">
+        <button onclick="copyIdToClipboard()" class="share-btn">Copy ID</button>
+        <button onclick="copyUrlToClipboard()" class="share-btn">Copy Link</button>
+    </div>
 
     <div style="display: none;" id="current-time">{{.CurrentTime}}</div>
-
 
 </body>
 
