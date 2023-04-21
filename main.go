@@ -24,6 +24,12 @@ var (
 )
 
 func main() {
+	cfg, err := NewConfig()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	http.HandleFunc("/", home)
 	http.HandleFunc("/create", create)
 	http.HandleFunc("/join/", join)
@@ -34,7 +40,7 @@ func main() {
 
 	go removeIdleStopwatchs(sigs)
 
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), nil)
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
