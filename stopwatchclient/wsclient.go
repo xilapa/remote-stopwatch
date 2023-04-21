@@ -130,14 +130,33 @@ func (w *StopWatchWSClient) send() {
 
 // stopClient closes the websocket connection and removes the client from the stopwatch.
 func (w *StopWatchWSClient) stopClient() {
+	// remove the client from the stopwatch
+	w.sw.Remove(w)
 	// read the error
 	err := <-w.err
+	// consume remaining errors from the channel
+emptyerr:
+	for {
+		select {
+		case <-w.err:
+		default:
+			break emptyerr
+		}
+	}
 	// wait for read() to return
 	<-w.readStopped
 	// close the websocket connection
 	w.c.Close(websocket.StatusInternalError, err.Error())
-	// remove the client from the stopwatch
-	w.sw.Remove(w)
+
+	// consume remaining messages from the channel
+emptymsgs:
+	for {
+		select {
+		case <-w.msgs:
+		default:
+			break emptymsgs
+		}
+	}
 	// close the channel used to send messages to the client
 	close(w.msgs)
 	// close the error channel
