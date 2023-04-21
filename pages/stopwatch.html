@@ -107,10 +107,11 @@
         }
     </style>
     <script defer>
-        // time constants
+        // constants
         const hourMs = 3600 * 1000
         const minMs = 60 * 1000
         const secMs = 1000
+        const host = document.location.host
 
         // elements
         let swEl = () => {
@@ -135,7 +136,7 @@
         }
 
         // Connect to WebSocket server
-        let ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
+        let ws = new WebSocket(`ws://${host}/syncwatch/{{.Id}}`)
 
         // When WebSocket connection is opened
         ws.onopen = function () {
@@ -165,7 +166,7 @@
 
         function reconnect() {
             console.log('WebSocket connection closed. Reconnecting...')
-            ws = new WebSocket('ws://localhost:8080/syncwatch/{{.Id}}')
+            ws = new WebSocket(`ws://${host}/syncwatch/{{.Id}}`)
         }
 
         function convertMillisecondsToTime(milliseconds) {
@@ -197,7 +198,6 @@
         }
 
         function copyIdToClipboard() {
-            debugger
             const id = idEl().innerText;
             copyTextToClipboard(id);
         }
