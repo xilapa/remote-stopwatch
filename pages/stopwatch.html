@@ -112,6 +112,7 @@
         const minMs = 60 * 1000
         const secMs = 1000
         const host = document.location.host
+        const wsSchema = document.location.protocol === 'https:' ? 'wss' : 'ws'
 
         // elements
         let swEl = () => {
@@ -136,7 +137,7 @@
         }
 
         // Connect to WebSocket server
-        let ws = new WebSocket(`ws://${host}/syncwatch/{{.Id}}`)
+        let ws = new WebSocket(`${wsSchema}://${host}/syncwatch/{{.Id}}`)
 
         // When WebSocket connection is opened
         ws.onopen = function () {
@@ -166,7 +167,7 @@
 
         function reconnect() {
             console.log('WebSocket connection closed. Reconnecting...')
-            ws = new WebSocket(`ws://${host}/syncwatch/{{.Id}}`)
+            ws = new WebSocket(`${wsSchema}://${host}/syncwatch/{{.Id}}`)
         }
 
         function convertMillisecondsToTime(milliseconds) {
