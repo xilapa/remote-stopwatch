@@ -140,7 +140,9 @@
         let ws = new WebSocket(`${wsSchema}://${host}/syncwatch/{{.Id}}`)
 
         // When WebSocket connection is opened
-        ws.onopen = function () {
+        ws.onopen = onOpen
+
+        function onOpen() {
             console.log('WebSocket connection opened.')
         }
 
@@ -168,6 +170,11 @@
         function reconnect() {
             console.log('WebSocket connection closed. Reconnecting...')
             ws = new WebSocket(`${wsSchema}://${host}/syncwatch/{{.Id}}`)
+
+            ws.onopen = onOpen
+            ws.onmessage = processEvent
+            ws.onclose = reconnect
+            ws.onerror = reconnect
         }
 
         function convertMillisecondsToTime(milliseconds) {
